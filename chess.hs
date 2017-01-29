@@ -25,7 +25,7 @@ move (Square x y) (Vector xStep yStep) = Square (xStep x) (yStep y)
 
 pawnSteps = [Vector (+0) (+1), Vector (+0) (+2)]
 knightSteps = [Vector (+(-2)) (+1), Vector (+(-1)) (+2), Vector (+1) (+2), Vector (+2) (+1), Vector (+2) (+(-1)), Vector (+1) (+(-2)), Vector (+(-1)) (+(-2)), Vector (+(-2)) (+(-1))]
-unboundedBishopSteps = concat (map (\x -> [Vector (+x) (+x), Vector (+x) (+(-x)), Vector (+(-x)) (+x), Vector (+(-x)) (+(-x))]) [1..])
+unboundedBishopSteps = concatMap (\x -> [Vector (+x) (+x), Vector (+x) (+(-x)), Vector (+(-x)) (+x), Vector (+(-x)) (+(-x))]) [1..7]
 
 legalPawnMoves :: Square -> [Square]
 legalPawnMoves = applySteps pawnSteps
@@ -34,5 +34,7 @@ legalKnightMoves :: Square -> [Square]
 legalKnightMoves = applySteps knightSteps
 
 boundedBishopMoves :: Square -> [Square]
-boundedBishopMoves square = takeValid (applySteps unboundedBishopSteps square)
-    where takeValid = takeWhile onBoard
+boundedBishopMoves = takeValid . (applySteps unboundedBishopSteps)
+    where takeValid = filter onBoard
+
+
