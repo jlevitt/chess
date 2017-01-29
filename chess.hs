@@ -1,25 +1,38 @@
-import Data.Char (chr, ord)
+import Data.Char (chr, ord, toUpper)
 
-data Position = Position { x :: Int, y :: Int }
+data Square = Square { x :: Int, y :: Int }
 data Vector = Vector { xStep :: (Int -> Int), yStep :: (Int -> Int) }
 
-instance Show Position where
-    show p = let (file, rank) = translate p in file:show rank
+instance Show Square where
+    show s = let (file, rank) = translate s in file:show rank
 
-pawnMoves = [Vector (+0) (+1), Vector (+0) (+2)]
-knightMoves = [Vector (+(-2)) (+1), Vector (+(-1)) (+2), Vector (+1) (+2), Vector (+2) (+1), Vector (+2) (+(-1)), Vector (+1) (+(-2)), Vector (+(-1)) (+(-2)), Vector (+(-2)) (+(-1))]
+translate :: Square -> (Char, Int)
+translate (Square x y) = (chr (65 + x), y + 1)
 
-translate :: Position -> (Char, Int)
-translate (Position x y) = (chr (65 + x), y + 1)
+mkSquare :: String -> Square
+mkSquare (file:rank:[]) = Square x y
+    where x = (ord . toUpper) file - 65
+          y = ord rank - 49
 
-getPosition :: Char -> Int -> Position
-getPosition x y = Position ((ord x) - 65) (y - 1)
+onBoard :: Square -> Bool
+onBoard (Square x y ) = x >=0 && x <= 7 && y >= 0 && y <= 7
 
-move :: Position -> Vector -> Position
-move (Position x y) (Vector xStep yStep) = Position (xStep x) (yStep y)
+applySteps :: [Vector] -> Square -> [Square]
+applySteps moves square = map (move square) moves
 
-legalPawnMoves :: Position -> [Position]
-legalPawnMoves piece = map (move piece) pawnMoves
+move :: Square -> Vector -> Square
+move (Square x y) (Vector xStep yStep) = Square (xStep x) (yStep y)
 
-legalKnightMoves :: Position -> [Position]
-legalKnightMoves piece = map (move piece) knightMoves
+pawnSteps = [Vector (+0) (+1), Vector (+0) (+2)]
+knightSteps = [Vector (+(-2)) (+1), Vector (+(-1)) (+2), Vector (+1) (+2), Vector (+2) (+1), Vector (+2) (+(-1)), Vector (+1) (+(-2)), Vector (+(-1)) (+(-2)), Vector (+(-2)) (+(-1))]
+unboundedBishopSteps = concat (map (\x -> [Vector (+x) (+x), Vector (+x) (+(-x)), Vector (+(-x)) (+x), Vector (+(-x)) (+(-x))]) [1..])
+
+legalPawnMoves :: Square -> [Square]
+legalPawnMoves = applySteps pawnSteps
+
+legalKnightMoves :: Square -> [Square]
+legalKnightMoves = applySteps knightSteps
+
+boundedBishopMoves :: Square -> [Square]
+boundedBishopMoves square = takeValid (applySteps unboundedBishopSteps square)
+    where takeValid = takeWhile onBoard
